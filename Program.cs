@@ -12,12 +12,12 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Note App API V1");
+    c.RoutePrefix = $"documentation"; // Set to "" untuk akses di root domain (https://domain.com/)
+});
 
 app.UseHttpsRedirection();
 
