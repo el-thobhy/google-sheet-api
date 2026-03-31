@@ -4,6 +4,7 @@ using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using GoogleSheetAPI.Models;
+using System.Text;
 
 namespace GoogleSheetAPI.Services
 {
@@ -13,7 +14,8 @@ namespace GoogleSheetAPI.Services
         private readonly string _spreadsheetId;
         public GoogleSheetsService(IConfiguration config)
         {
-            var credential = GoogleCredential.FromFile(config["GoogleSheets:CredentialsPath"]);
+            var jsonCred = Encoding.UTF8.GetString(Convert.FromBase64String(config["GoogleSheets:CredentialString"]));
+            var credential = GoogleCredential.FromJson(jsonCred);
             _sheetsService = new SheetsService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credential,
