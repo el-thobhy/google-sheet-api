@@ -79,6 +79,22 @@ namespace GoogleSheetAPI.Services
                     Sentrals = sentrals.Where(x => x.SystemId == s.Id).ToList()
                 }).ToList(),
 
+                // Flat join: Systems dengan list Sentrals-nya
+                SystemsWithSentralsAndMachine = systems.Select(s => new MasterSystem
+                {
+                    Id = s.Id,
+                    SistemName = s.SistemName,
+                    Sentrals = sentrals
+                        .Where(x => x.SystemId == s.Id)
+                        .Select(se => new MasterSentral
+                        {
+                            Id = se.Id,
+                            SystemId = se.SystemId,
+                            SentralName = se.SentralName,
+                            Machines = machines.Where(m => m.SentralId == se.Id).ToList()
+                        }).ToList()
+                }).ToList(),
+
                 // Full hierarchy: 3 level nested
                 FullHierarchy = systems.Select(s => new MasterSystem
                 {

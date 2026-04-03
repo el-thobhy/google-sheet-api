@@ -32,6 +32,7 @@
 
         // Nested/Joined views
         public List<MasterSystem> SystemsWithSentrals { get; set; }
+        public List<MasterSystem> SystemsWithSentralsAndMachine { get; set; }
         public List<MasterSystem> FullHierarchy { get; set; }  // Systems → Sentrals → Machines
     }
 }

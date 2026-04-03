@@ -66,7 +66,7 @@ namespace GoogleSheetAPI.Controllers
         public async Task<IActionResult> GetAllSystem()
         {
             var db = await _sheetsService.GetDatabaseAsync();
-            return Ok(db.Systems);
+            return Ok(db.SystemsWithSentralsAndMachine);
         }
 
         [HttpGet("systems/{id}")]
