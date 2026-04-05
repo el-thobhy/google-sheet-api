@@ -139,5 +139,150 @@ namespace GoogleSheetAPI.Services
                 MachineName = row[2]?.ToString(),
                 Dmn = row[3]?.ToString()
             }).Skip(1).ToList() ?? new();
+
+        public async Task<bool> HeaderExistsAsync(string range)
+        {
+            var request = _sheetsService.Spreadsheets.Values.Get(
+               _spreadsheetId,
+               range);
+
+            var response = await request.ExecuteAsync();
+
+            return response.Values != null &&
+                   response.Values.Count > 0;
+        }
+        public async Task<int?> FindRowByIdAsync(
+            string sheetName,
+            string keyColumn,
+            string keyValue)
+        {
+            var range = $"{sheetName}!{keyColumn}:{keyColumn}";
+
+            var request =
+                _sheetsService.Spreadsheets.Values.Get(
+                    _spreadsheetId,
+                    range);
+
+            var response =
+                await request.ExecuteAsync();
+
+            if (response.Values == null)
+                return null;
+
+            for (int i = 0; i < response.Values.Count; i++)
+            {
+                var value =
+                    response.Values[i][0]?.ToString();
+
+                if (value == keyValue)
+                    return i + 1;
+            }
+
+            return null;
+        }
+        public async Task DeleteRowAsync(
+            string sheetName,
+            int rowNumber)
+        {
+            var deleteRequest =
+                new DeleteDimensionRequest
+                {
+                    Range = new DimensionRange
+                    {
+                        SheetId = await GetSheetId(sheetName),
+                        Dimension = "ROWS",
+                        StartIndex = rowNumber - 1,
+                        EndIndex = rowNumber
+                    }
+                };
+
+            var batchRequest =
+                new BatchUpdateSpreadsheetRequest
+                {
+                    Requests =
+                        new List<Request>
+                        {
+                    new Request
+                    {
+                        DeleteDimension =
+                            deleteRequest
+                    }
+                        }
+                };
+
+            await _sheetsService.Spreadsheets.BatchUpdate(
+                batchRequest,
+                _spreadsheetId)
+                .ExecuteAsync();
+        }
+        private async Task<int> GetSheetId(string sheetName)
+        {
+            var spreadsheet =
+                await _sheetsService.Spreadsheets.Get(_spreadsheetId)
+                    .ExecuteAsync();
+
+            var sheet =
+                spreadsheet.Sheets
+                    .FirstOrDefault(s =>
+                        s.Properties.Title == sheetName);
+
+            if (sheet == null)
+                throw new Exception(
+                    $"Sheet '{sheetName}' tidak ditemukan");
+
+            return sheet.Properties.SheetId.Value;
+        }
+
+        public async Task<Dictionary<string, object>> GetRowAsync(
+     string sheetName,
+     int rowNumber)
+        {
+            // Ambil header dulu
+            var headerRange = $"{sheetName}!A1:Z1";
+
+            var headerResponse =
+                await _sheetsService.Spreadsheets.Values
+                    .Get(_spreadsheetId, headerRange)
+                    .ExecuteAsync();
+
+            var headers =
+                headerResponse.Values?.FirstOrDefault();
+
+            if (headers == null)
+                return null;
+
+            // Ambil row
+            var rowRange =
+                $"{sheetName}!A{rowNumber}:Z{rowNumber}";
+
+            var rowResponse =
+                await _sheetsService.Spreadsheets.Values
+                    .Get(_spreadsheetId, rowRange)
+                    .ExecuteAsync();
+
+            var rowValues =
+                rowResponse.Values?.FirstOrDefault();
+
+            if (rowValues == null)
+                return null;
+
+            var result =
+                new Dictionary<string, object>();
+
+            for (int i = 0; i < headers.Count; i++)
+            {
+                var header =
+                    headers[i].ToString();
+
+                var value =
+                    i < rowValues.Count
+                        ? rowValues[i]
+                        : "";
+
+                result[header] = value;
+            }
+
+            return result;
+        }
     }
 }

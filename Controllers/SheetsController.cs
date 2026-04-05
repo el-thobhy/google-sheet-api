@@ -1,4 +1,6 @@
-﻿using GoogleSheetAPI.Helper;
+﻿using Google.Apis.Sheets.v4.Data;
+using GoogleSheetAPI.Helper;
+using GoogleSheetAPI.Models.Dtos;
 using GoogleSheetAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -16,38 +18,6 @@ namespace GoogleSheetAPI.Controllers
             _sheetsService = sheetsService;
         }
 
-        [HttpGet("data")]
-        public async Task<IActionResult> GetData(
-            [FromQuery] string sheet = "Sheet1",  // ← Default Sheet1
-            [FromQuery] string range = "A1:Z100"
-        )
-        {
-            // Gabungkan sheet + range
-            var fullRange = $"{sheet}!{range}";
-            var values = await _sheetsService.GetValuesAsync(fullRange);
-            return Ok(values);
-        }
-
-        [HttpPost("data")]
-        public async Task<IActionResult> AddData([FromBody] JsonElement jsonElement,  // ← Terima sebagai JsonElement dulu
-            [FromQuery] string range = "Sheet1!A1")
-        {
-            var values = JsonHelper.ConvertJsonElementToArray(jsonElement);
-
-            await _sheetsService.AppendValuesAsync(range, values);
-            return Ok(new { message = "Data berhasil ditambahkan" });
-        }
-
-        [HttpPut("data")]
-        public async Task<IActionResult> UpdateData(
-            [FromBody] JsonElement jsonElement,  // ← Terima sebagai JsonElement dulu
-            [FromQuery] string range = "A1:Z100"
-        )
-        {
-            var data = JsonHelper.ConvertJsonElementToArray(jsonElement);
-            await _sheetsService.UpdateValuesAsync(range, data);
-            return Ok(new { message = "Data berhasil diupdate" });
-        }
 
         [HttpGet("database")]
         public async Task<IActionResult> GetDatabase()
